@@ -74,6 +74,10 @@ struct Data {
 #[allow(clippy::result_large_err)]
 async fn load(data: Data, load_context: &mut LoadContext<'_>) -> Result<BundleAsset> {
     let mut bundle = FluentBundle::new_concurrent(vec![data.locale.clone()]);
+    // Fluent wraps placeable arguments in U+2068 FIRST STRONG ISOLATE / U+2069 POP
+    // DIRECTIONAL ISOLATE by default. Those invisible characters reach Bevy's text
+    // layout and break node sizing (bevyengine/bevy#22037), so keep them out.
+    bundle.set_use_isolating(false);
     for mut path in data.resources {
         if path.is_relative() {
             if let Some(parent) = load_context.path().path().parent() {
